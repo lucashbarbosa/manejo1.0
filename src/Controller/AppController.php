@@ -19,7 +19,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
-
+use Cake\Event\EventInterface ;
+use App\Controller\DatabaseController;
 /**
  * Application Controller
  *
@@ -47,10 +48,22 @@ class AppController extends Controller
     {
         parent::initialize();
 
+        
 
 
-        $this->loadComponent('RequestHandler');
         $this->loadComponent('Flash');
+        // $this->loadComponent('Auth', [
+        //     'loginRedirect' => [
+        //         'controller' => 'users',
+        //         'action' => 'index'
+        //     ],
+        //     'logoutRedirect' => [
+        //         'controller' => 'users',
+        //         'action' => 'logout'
+        //     ]
+        // ]);
+        $this->loadComponent('RequestHandler');
+
         $this->disableAutoRender();
         /*
          * Enable the following component for recommended CakePHP form protection settings.
@@ -62,12 +75,28 @@ class AppController extends Controller
 
 
 
-    public function response($data, $code = 200, $next = false)
+    public function beforeFilter(EventInterface $event){
+        parent::beforeFilter($event);
+        $this->conn = new DatabaseController(); 
+        (new UsersController())->authenticate(); //TODO: Verify if its is safe
+           
+    }
+    public function to_object($array){
+        return (object) $array;
+    }
+
+    public function data(){
+        return $this->request->input("json_decode", true);
+    }
+    public function response($data, $code = 200, $message = "ok", $next = false)
     {
+
+       
 
         $response = [
             "code" => $code,
             "data" => $data,
+            "message" => $message,
             "next" => $next
         ];
 
